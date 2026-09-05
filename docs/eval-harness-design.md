@@ -103,9 +103,11 @@ mechanism here.
   `docs/edge-case-dataset.md`) — every row should Pass, no exceptions, especially the two
   injection-resistance rows (`edge-08`, `edge-09`), where a Fail is a security regression.
 
-**Review:** read the job's output report (S3, `outputDataConfig.s3Uri`) after each run — the exact
-report schema should be confirmed against the first real job run against a live account, since
-that's the part of this design not yet validated end-to-end.
+**Review:** read the job's output report (S3, `outputDataConfig.s3Uri`) after each run — confirmed
+against a real completed run (5/5 Pass on the golden set, Claude Sonnet 4.6 under test, Claude
+Opus 4.6 as judge), not assumed. Per-row results live in a `..._output.jsonl` file, one JSON
+object per row, with the judge's full explanation alongside each `Pass`/`Fail` — see
+`docs/runbook.md` for the exact path and schema.
 
 ## This evaluation's place in a larger delivery plan
 
