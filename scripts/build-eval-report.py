@@ -132,7 +132,7 @@ def build_cases(job_results, datasets, fixture_meta):
     return cases
 
 
-HTML_TEMPLATE = r"""<title>Extraction Eval Report</title>
+HTML_TEMPLATE = r"""<title>__TITLE__</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
 <style>
   :root {
@@ -378,7 +378,19 @@ def main():
     ordered = sorted(cases.values(), key=lambda c: (c["category"], c["id"]))
     run_labels = [f"{r['job_name']} ({r['model_id']})" for r in job_results]
 
-    html = HTML_TEMPLATE.replace("__DATA__", json.dumps(ordered)).replace("__RUN_LABELS__", json.dumps(run_labels))
+    categories = {c["category"] for c in ordered}
+    if categories == {"golden"}:
+        title = "Golden Set Eval Report"
+    elif categories == {"edge"}:
+        title = "Edge Case Eval Report"
+    else:
+        title = "Transcript Extraction Eval Report"
+
+    html = (
+        HTML_TEMPLATE.replace("__DATA__", json.dumps(ordered))
+        .replace("__RUN_LABELS__", json.dumps(run_labels))
+        .replace("__TITLE__", title)
+    )
 
     out_path = repo_root / args.out
     out_path.parent.mkdir(parents=True, exist_ok=True)
