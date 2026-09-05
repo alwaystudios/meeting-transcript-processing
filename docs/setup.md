@@ -42,12 +42,30 @@ hadn't completed. Don't move to step 3 without this check passing.
 
 ## 3. Swap to the steady-state policy
 
-Copy `iam/steady-state-policy.json` to `iam/steady-state-policy.local.json` the same way, replace
-the placeholders, and attach it in place of the bootstrap policy. This is what stays attached
-long-term — `cdk deploy`/`cdk destroy`
-only need `sts:AssumeRole` on 4 of the bootstrap-created roles (the CLI does the actual
-CloudFormation work through the assumed `deploy-role`, not the caller's own permissions), plus
-direct Bedrock permissions for actually submitting evaluation jobs later.
+Copy `iam/steady-state-policy.json` to `iam/steady-state-policy.local.json` the same way and
+replace the placeholders. This is what stays attached long-term — `cdk deploy`/`cdk destroy` only
+need `sts:AssumeRole` on 4 of the bootstrap-created roles (the CLI does the actual CloudFormation
+work through the assumed `deploy-role`, not the caller's own permissions), plus direct Bedrock
+permissions for actually submitting and reading evaluation jobs later.
+
+**Attach this one as a customer-managed policy, not an inline policy** — it grew past the 2048
+character inline-policy limit partway through this session (each fix below added a statement) and
+will likely keep growing; a managed policy's 6144-character ceiling gives real headroom instead of
+trimming statement names for space. The bootstrap policy from step 1 is small enough to stay
+inline.
+
+```bash
+aws iam create-policy --policy-name meeting-transcript-eval-steady-state \
+  --policy-document file://iam/steady-state-policy.local.json
+# then attach the ARN it returns:
+aws iam attach-user-policy --user-name <your-user> --policy-arn <arn from above>
+```
+
+If you'd already attached an earlier, smaller version as an *inline* policy and are now hitting
+`Policy exceeding the 2048 characters limit can't be saved` when trying to update it — that's this
+same limit; switch to the managed-policy commands above instead of trying to shrink it further, and
+remove the old inline one (`aws iam delete-user-policy --user-name <your-user> --policy-name ...`)
+once the managed one is attached, so you're not carrying two.
 
 Three of this policy's statements exist because of real gaps found by actually running this, not
 foresight — each is worth understanding before you assume the policy is complete:
@@ -126,6 +144,21 @@ and need different fixes. In the order you're likely to hit them:
    judge model specifically must support on-demand invocation directly (or via the built-in
    cross-region profile) — you can't paper over a judge model's on-demand limitation with a
    custom profile the way you sometimes can for the generator model.
+6. **Even a model that's enabled and invokable may throttle outright on a fresh account, and this
+   one has no self-service fix.** A 5-row job succeeded against Claude Sonnet 4.6; the same model
+   on a 9-row job failed with `Encountered throttling exception while serving the request for
+   model ...` — confirmed genuinely account-level and proportional to load, not a fluke, by
+   retrying alone (no concurrent job) and getting the identical failure. **This is not the same as
+   a Service Quotas limit, and checking Service Quotas is a dead end for it**: for Anthropic models
+   on Bedrock, the console only shows a *tokens-per-minute* quota (millions per minute — nowhere
+   near what a handful of rows would use), not a *requests-per-minute* one the way Amazon's own
+   Nova models get. Whatever actually throttled these small jobs is an internal, undocumented
+   burst/concurrency limit applied to new accounts, not a named quota you can request an increase
+   for. Two real options, not one: open an AWS Support case describing the exact error and ask them
+   to raise it directly (not self-service, response time varies), or **switch the model under test
+   to an Amazon-hosted model** (Nova Pro, Nova Lite, etc.) — those get a distinct, much larger
+   requests-per-minute allowance and didn't throttle on the same dataset. This account ended up
+   doing the latter; see `docs/eval-harness-design.md` for the caveat that comes with it.
 
 **Practical upshot: don't fight cross-region profiles if you don't have to.** The fastest path to
 a working setup is testing candidate models with a plain bare model ID first (older, more

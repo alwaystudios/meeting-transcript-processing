@@ -60,14 +60,21 @@ assumption about deployment target. Instead:
    ```bash
    aws bedrock get-evaluation-job --job-identifier <jobArn from the create response>
    ```
-5. Once `status` is `Completed`, read the results from the output bucket at the `s3Uri` prefix
-   you set in the job config (`results/golden/` / `results/edge-case/`).
-
-**Not yet validated end-to-end**: the exact shape of the results Bedrock writes to that S3 prefix
-hasn't been confirmed against a real run. The job submission schema above is confirmed directly
-from `aws bedrock create-evaluation-job help` on this machine's AWS CLI — the input side is solid.
-The first real run against a live account is what confirms the output/report format; expect to
-adjust how results get read once that happens, not the job submission itself.
+5. Once `status` is `Completed`, read the results — confirmed against a real completed run, not
+   assumed. Two things land in the output bucket, under the `s3Uri` prefix you set in the job
+   config:
+   - `<prefix>/<job-name>/<job-id>/custom_metrics/<MetricName>.json` — the custom metric
+     definition itself (small, not the per-row results).
+   - `<prefix>/<job-name>/<job-id>/models/<model-id>/taskTypes/General/datasets/<dataset-name>/<uuid>_output.jsonl`
+     — the actual per-row results. One JSON object per line, each with `inputRecord` (the
+     `prompt`/`referenceResponse`/`category` you submitted), `modelResponses[].response` (what the
+     generator model actually returned), and `automatedEvaluationResult.scores[].result` (`Pass` or
+     `Fail`) plus `evaluatorDetails[].explanation` (the judge's reasoning, worth reading even on a
+     `Pass` — it's what tells you *why*, and whether the judge's tolerance for rewording matches
+     what you actually want to allow).
+   - You need `s3:ListBucket`/`s3:GetObject` on the output bucket yourself to read this (see
+     `iam/steady-state-policy.json`'s `ReadEvaluationResults` statement) — a gap found the first
+     time this was actually tried, since only the service role had read access before that.
 
 ## What constitutes a pass
 
