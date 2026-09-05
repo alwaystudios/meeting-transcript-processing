@@ -48,6 +48,17 @@
         "bedrock:GetInferenceProfile"
       ],
       "Resource": "*"
+    },
+    {
+      "Sid": "ReadStackOutputs",
+      "Effect": "Allow",
+      "Action": [
+        "cloudformation:DescribeStacks",
+        "cloudformation:DescribeStackEvents",
+        "cloudformation:GetTemplate",
+        "cloudformation:ListStackResources"
+      ],
+      "Resource": "arn:aws:cloudformation:<REGION>:<ACCOUNT_ID>:stack/MeetingTranscriptEvalHarness/*"
     }
   ]
 }
