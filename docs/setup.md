@@ -11,8 +11,11 @@ Don't deploy this into an account that runs anything else — see the reasoning 
 
 ## 1. Attach the bootstrap policy (one-time)
 
-Copy `iam/bootstrap-policy.json`, replace every `<ACCOUNT_ID>` and `<REGION>` with your actual
-account ID and target region, and attach it to whatever IAM user/role you'll deploy with.
+Copy `iam/bootstrap-policy.json` to `iam/bootstrap-policy.local.json` (gitignored — see
+`.gitignore`; the tracked template keeps its placeholders, only the local copy holds real values),
+replace every `<ACCOUNT_ID>` and `<REGION>` with your actual account ID and target region, and
+attach it to whatever IAM user/role you'll deploy with (console, or
+`aws iam put-user-policy --policy-document file://iam/bootstrap-policy.local.json ...`).
 
 This is deliberately scoped to CDK's own predictable bootstrap resource names (the
 `cdk-hnb659fds-*` roles, staging bucket, staging ECR repo) rather than a blanket admin grant —
@@ -39,8 +42,9 @@ hadn't completed. Don't move to step 3 without this check passing.
 
 ## 3. Swap to the steady-state policy
 
-Copy `iam/steady-state-policy.json`, replace the placeholders the same way, and attach it in
-place of the bootstrap policy. This is what stays attached long-term — `cdk deploy`/`cdk destroy`
+Copy `iam/steady-state-policy.json` to `iam/steady-state-policy.local.json` the same way, replace
+the placeholders, and attach it in place of the bootstrap policy. This is what stays attached
+long-term — `cdk deploy`/`cdk destroy`
 only need `sts:AssumeRole` on 4 of the bootstrap-created roles (the CLI does the actual
 CloudFormation work through the assumed `deploy-role`, not the caller's own permissions), plus
 direct Bedrock permissions for actually submitting evaluation jobs later.

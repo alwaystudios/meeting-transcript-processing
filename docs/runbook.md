@@ -14,10 +14,18 @@ credentials point at. Note the four values in the `Outputs` section after deploy
 ## Run an evaluation
 
 Evaluation Jobs are not a CDK-deployed resource (Bedrock doesn't expose them as a CloudFormation
-resource type) — running one is a plain AWS CLI call using the templates in `eval-jobs/`:
+resource type) — running one is a plain AWS CLI call using the templates in `eval-jobs/`. The
+templates in git keep their `<PLACEHOLDER>` tokens — don't edit them in place with real values,
+since those values are account-specific (bucket names, an IAM role ARN) and this repo makes no
+assumption about deployment target. Instead:
 
-1. Copy `eval-jobs/golden-job.json` and `eval-jobs/edge-case-job.json`, and replace the
-   placeholders:
+1. Copy each template to a `.local.json` file **in the same `eval-jobs/` directory** —
+   `eval-jobs/*.local.json` is gitignored, so real values never risk being committed:
+   ```bash
+   cp eval-jobs/golden-job.json eval-jobs/golden-job.local.json
+   cp eval-jobs/edge-case-job.json eval-jobs/edge-case-job.local.json
+   ```
+2. Edit the `.local.json` copies (not the originals) and replace the placeholders:
    - `<EVAL_JOB_ROLE_ARN>` → the `EvalJobRoleArn` stack output.
    - `<DATASET_BUCKET_NAME>` / `<OUTPUT_BUCKET_NAME>` → the corresponding stack outputs.
    - `<MODEL_UNDER_TEST_ID>` → whichever Claude model you've enabled Bedrock access for and want
@@ -25,16 +33,16 @@ resource type) — running one is a plain AWS CLI call using the templates in `e
      CDK context `-c modelUnderTestId=...`; this should match).
    - `<JUDGE_MODEL_ID>` → a different, stronger model than the one under test (see
      `docs/eval-harness-design.md` for why).
-2. Submit each job:
+3. Submit each job, pointing at the `.local.json` copies:
    ```bash
-   aws bedrock create-evaluation-job --cli-input-json file://eval-jobs/golden-job.json
-   aws bedrock create-evaluation-job --cli-input-json file://eval-jobs/edge-case-job.json
+   aws bedrock create-evaluation-job --cli-input-json file://eval-jobs/golden-job.local.json
+   aws bedrock create-evaluation-job --cli-input-json file://eval-jobs/edge-case-job.local.json
    ```
-3. Check status:
+4. Check status:
    ```bash
    aws bedrock get-evaluation-job --job-identifier <jobArn from the create response>
    ```
-4. Once `status` is `Completed`, read the results from the output bucket at the `s3Uri` prefix
+5. Once `status` is `Completed`, read the results from the output bucket at the `s3Uri` prefix
    you set in the job config (`results/golden/` / `results/edge-case/`).
 
 **Not yet validated end-to-end**: the exact shape of the results Bedrock writes to that S3 prefix

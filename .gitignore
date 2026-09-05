@@ -2,3 +2,8 @@ node_modules/
 cdk.out/
 cdk.context.json
 *.log
+
+# Filled-in copies with real account-specific values (bucket names, role ARNs, account IDs).
+# Templates with <PLACEHOLDER> tokens stay tracked; only the *.local.json copies are gitignored.
+eval-jobs/*.local.json
+iam/*.local.json
