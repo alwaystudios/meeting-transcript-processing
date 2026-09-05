@@ -12,7 +12,9 @@ supporting infrastructure:
   `BucketDeployment`), one for evaluation job output. Both `RemovalPolicy.DESTROY` with
   `autoDeleteObjects` — nothing here holds data worth retaining.
 - An IAM role Bedrock Evaluation Jobs assume to read the dataset and write results, scoped to
-  only that S3 access plus `bedrock:InvokeModel` on Claude models.
+  only that S3 access plus `bedrock:InvokeModel` (`Resource: "*"` — a scoped model ARN here
+  produced "does not have permission to call the model" from Bedrock's own job validation,
+  confirmed by testing, not a syntax issue; see `docs/setup.md`).
 
 Evaluation Jobs themselves are **not** a CloudFormation resource — confirmed by inspecting the
 installed `aws-cdk-lib/aws-bedrock` module, which has `CfnPrompt`/`CfnPromptVersion` but nothing
@@ -63,14 +65,33 @@ JSONL files are what the evaluation job actually reads.
 `eval-jobs/*.json`, wired to `customMetricConfig.evaluatorModelConfig.bedrockEvaluatorModels`) —
 deliberately different from the model under test to avoid same-model self-preference bias.
 
-Bedrock restricts which models are usable as a custom-metrics judge (a separate, shorter allowlist
-than the general model catalog — confirmed against AWS's own docs, not assumed). As of writing,
-`anthropic.claude-sonnet-5` and `anthropic.claude-opus-5` are **not** on that list yet — a
-`ValidationException` naming the model as unsupported is what actually surfaces this, not a
-model-access or IAM problem. The strongest currently-supported option is
-**Claude Opus 4.8** (`anthropic.claude-opus-4-8`) — use that instead until Bedrock's allowlist
-catches up to the newer generation. Recheck the "Supported evaluator models (custom metrics)" list
-in AWS's model evaluation docs before assuming a newer model works.
+Which exact model that ends up being is account-specific, not a single fixed answer — three
+independent constraints narrow it down, and all three need checking empirically, not assumed from
+a catalog listing (see `docs/setup.md` step 4 for the full account-tier / regional-access story):
+
+1. Bedrock restricts which models are usable as a custom-metrics judge at all (a separate, shorter
+   allowlist than the general model catalog — confirmed against AWS's own docs). As of writing,
+   `anthropic.claude-sonnet-5` and `anthropic.claude-opus-5` are not on it — recheck the "Supported
+   evaluator models (custom metrics)" list in AWS's model evaluation docs before assuming a newer
+   model works.
+2. The account may not be allowed to request every model the allowlist names — Claude Opus 4.8
+   failed with "not available for this account" (a hard account-tier gate, unrelated to IAM/region).
+3. The evaluator-model field only accepts a bare foundation-model ID or a system-defined
+   cross-region `inference-profile` ID — **not** a custom `application-inference-profile` ARN
+   (stricter than the model-under-test field). So the judge model must support on-demand
+   invocation directly; you can't work around that limitation with your own pinned profile the
+   way you sometimes can for the model under test.
+
+On this account, that worked out to **Claude Opus 4.6** (bare `anthropic.claude-opus-4-6-v1`, no
+inference profile needed at all) — confirmed by testing, not assumed to generalize to every
+account. Re-derive this for a new account rather than hardcoding the same model ID.
+
+**The model under test needs the same empirical check, for a different reason**: Claude Haiku 4.5
+(the original choice) turned out to have no on-demand invocation path at all in this account —
+confirmed by testing two different single-region pinned profiles, both rejected with "does not
+support On Demand inference." This account ended up using **Claude 3.7 Sonnet**
+(`anthropic.claude-3-7-sonnet-20250219-v1:0`) instead — an older, more established model, which
+turned out to matter: newer releases are more likely to require cross-region-only invocation.
 
 **Cost tracking: none.** No token/cost ledger — Bedrock Evaluation Jobs bill directly; use the
 AWS Cost Explorer / Billing console if spend needs tracking, rather than building a parallel

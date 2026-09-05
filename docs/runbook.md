@@ -43,11 +43,14 @@ assumption about deployment target. Instead:
    - `<EVAL_JOB_ROLE_ARN>` → the `EvalJobRoleArn` value from the command above.
    - `<DATASET_BUCKET_NAME>` / `<OUTPUT_BUCKET_NAME>` → the corresponding values from the same
      command.
-   - `<MODEL_UNDER_TEST_ID>` → whichever Claude model you've enabled Bedrock access for and want
-     to test (the prompt itself is deployed already configured against the model ID passed as
-     CDK context `-c modelUnderTestId=...`; this should match).
-   - `<JUDGE_MODEL_ID>` → a different, stronger model than the one under test (see
-     `docs/eval-harness-design.md` for why).
+   - `<MODEL_UNDER_TEST_ID>` → must match the model ID passed as CDK context
+     `-c modelUnderTestId=...` when you deployed. **Not just any enabled model works** — see
+     `docs/setup.md` step 4 before picking one; catalog-listed and account-tier-gated and
+     on-demand-capable are three different things, and this took the most iteration of anything
+     in setup.
+   - `<JUDGE_MODEL_ID>` → a different, stronger model than the one under test, and it needs its
+     own separate check (see `docs/eval-harness-design.md` — the judge-model field has a stricter
+     ARN format than the model-under-test field).
 3. Submit each job, pointing at the `.local.json` copies:
    ```bash
    aws bedrock create-evaluation-job --cli-input-json file://eval-jobs/golden-job.local.json

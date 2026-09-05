@@ -21,8 +21,8 @@ data files, and running an evaluation is a single AWS CLI call.
 - `iam/bootstrap-policy.json`, `iam/steady-state-policy.json` — the two IAM policy templates a new
   deploying account needs (placeholders for account ID/region) — see `docs/setup.md`.
 - `docs/setup.md` — **first-time setup, start here on a brand-new account**: IAM policies, CDK
-  bootstrap, enabling Bedrock model access, first deploy — including the two things that actually
-  went wrong the first time this was done.
+  bootstrap, enabling Bedrock model access, picking model IDs that actually work, first deploy —
+  including everything that actually went wrong the first time this was done.
 - `docs/operator-guide.md` — plain-language guide to the extraction rules.
 - `docs/eval-harness-design.md` — what's evaluated, the custom-metric design, and the trade-off of
   zero bespoke code (no deterministic checks — everything is judged by an LLM against written
