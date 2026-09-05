@@ -2,8 +2,10 @@
 
 CDK infrastructure for evaluating a prompt that extracts meeting actions and decisions from
 Google Meet transcripts, using Amazon Bedrock's native Prompt Management and Evaluation Jobs.
-Zero application code — the only code here is the CDK stack; the prompt and datasets are plain
-data files, and running an evaluation is a single AWS CLI call.
+No evaluation logic is reimplemented here — the CDK stack is the only code needed to deploy and
+run this; the prompt and datasets are plain data files, and running an evaluation is a single AWS
+CLI call. The one deliberate exception is `scripts/build-eval-report.py`, a report generator for
+results Bedrock already produced — it doesn't touch the evaluation itself.
 
 ## What's here
 
@@ -29,6 +31,9 @@ data files, and running an evaluation is a single AWS CLI call.
   instructions).
 - `docs/golden-dataset.md` / `docs/edge-case-dataset.md` — what each dataset covers.
 - `docs/runbook.md` — deploy, run an evaluation, read results, tear down.
+- `scripts/build-eval-report.py` — turns one or more completed job ARNs into a readable HTML
+  report (transcript, response, judge reasoning per fixture, with a version-comparison view across
+  multiple runs). Plain Python 3 + the AWS CLI, no other dependencies. Output is gitignored.
 
 ## Quick start
 
