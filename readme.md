@@ -18,6 +18,11 @@ data files, and running an evaluation is a single AWS CLI call.
   (raw transcript, expected extraction, the rule each one validates).
 - `eval-jobs/golden-job.json`, `eval-jobs/edge-case-job.json` — `create-evaluation-job` CLI input
   templates (need the placeholder values filled in after deploy — see `docs/runbook.md`).
+- `iam/bootstrap-policy.json`, `iam/steady-state-policy.json` — the two IAM policy templates a new
+  deploying account needs (placeholders for account ID/region) — see `docs/setup.md`.
+- `docs/setup.md` — **first-time setup, start here on a brand-new account**: IAM policies, CDK
+  bootstrap, enabling Bedrock model access, first deploy — including the two things that actually
+  went wrong the first time this was done.
 - `docs/operator-guide.md` — plain-language guide to the extraction rules.
 - `docs/eval-harness-design.md` — what's evaluated, the custom-metric design, and the trade-off of
   zero bespoke code (no deterministic checks — everything is judged by an LLM against written
@@ -27,9 +32,12 @@ data files, and running an evaluation is a single AWS CLI call.
 
 ## Quick start
 
+**First time in a given AWS account: read `docs/setup.md` first** — it covers the IAM policies and
+CDK bootstrap this needs before `cdk deploy` will work.
+
 ```bash
 npm install
-npx cdk deploy
+npx cdk deploy -c modelUnderTestId=<your enabled Bedrock model ID>
 ```
 
 Then see `docs/runbook.md` for filling in `eval-jobs/*.json` and submitting an evaluation via
@@ -39,7 +47,8 @@ Then see `docs/runbook.md` for filling in `eval-jobs/*.json` and submitting an e
 
 No AWS account, region, or model ID is hardcoded — point it at whichever account has Bedrock
 model access enabled for the Claude models you want to use, via standard AWS credential
-resolution. Model IDs are passed as CDK context (`-c modelUnderTestId=...`).
+resolution. Model IDs are passed as CDK context (`-c modelUnderTestId=...`). See `docs/setup.md`
+for the full first-time sequence, including IAM.
 
 ## Tearing down
 
