@@ -24,6 +24,15 @@
       "Resource": "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:evaluation-job/*"
     },
     {
+      "Sid": "CreateEvaluationJobOnModels",
+      "Effect": "Allow",
+      "Action": "bedrock:CreateEvaluationJob",
+      "Resource": [
+        "arn:aws:bedrock:<REGION>::foundation-model/anthropic.claude-*",
+        "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:inference-profile/*.anthropic.claude-*"
+      ]
+    },
+    {
       "Sid": "PassEvalJobRoleToBedrock",
       "Effect": "Allow",
       "Action": "iam:PassRole",

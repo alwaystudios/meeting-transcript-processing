@@ -1,8 +1,8 @@
 # First-time AWS setup
 
-This is the exact sequence to get this stack running in a fresh AWS account, including the two
-things that actually went wrong the first time this was done — both fixed in the policy templates
-below, but worth knowing why they're there.
+This is the exact sequence to get this stack running in a fresh AWS account, including the things
+that actually went wrong the first time this was done — all fixed in the policy templates below,
+but worth knowing why they're there.
 
 ## 0. Use a dedicated account
 
@@ -49,17 +49,26 @@ only need `sts:AssumeRole` on 4 of the bootstrap-created roles (the CLI does the
 CloudFormation work through the assumed `deploy-role`, not the caller's own permissions), plus
 direct Bedrock permissions for actually submitting evaluation jobs later.
 
-**This policy's `DiscoverModelCatalog` statement exists because of a real gap**: the first
-version of this policy didn't include `bedrock:ListFoundationModels` / `ListInferenceProfiles`,
-and discovering which Claude models were actually enabled failed with `AccessDeniedException`.
+Three of this policy's statements exist because of real gaps found by actually running this, not
+foresight — each is worth understanding before you assume the policy is complete:
 
-**Its `ReadStackOutputs` statement exists because of another real gap**: `cdk deploy` gets
-`cloudformation:DescribeStacks` implicitly through the assumed `deploy-role`, but a *plain*
-`aws cloudformation describe-stacks` call (which `docs/runbook.md` tells you to run, to fetch the
-stack outputs for `eval-jobs/*.local.json`) uses your own identity directly, not the assumed
-role — and failed with `AccessDenied` the first time this was run without this statement.
-These are catalog-wide read actions with no per-model ARN to scope to, so they need
-`Resource: "*"` — that's not a scoping mistake, there's nothing narrower to scope to.
+- **`DiscoverModelCatalog`**: the first version of this policy didn't include
+  `bedrock:ListFoundationModels` / `ListInferenceProfiles`, and discovering which Claude models
+  were actually enabled failed with `AccessDeniedException`. These are catalog-wide read actions
+  with no per-model ARN to scope to, so they need `Resource: "*"` — that's not a scoping mistake,
+  there's nothing narrower to scope to.
+- **`ReadStackOutputs`**: `cdk deploy` gets `cloudformation:DescribeStacks` implicitly through the
+  assumed `deploy-role`, but a *plain* `aws cloudformation describe-stacks` call (which
+  `docs/runbook.md` tells you to run, to fetch the stack outputs for `eval-jobs/*.local.json`)
+  uses your own identity directly, not the assumed role — and failed with `AccessDenied` the first
+  time this was run without this statement.
+- **`CreateEvaluationJobOnModels`**: `bedrock:CreateEvaluationJob`'s resource-level check isn't
+  only against the `evaluation-job` ARN being created — Bedrock also checks it against the model
+  ARN(s) referenced inside the request, the same way `bedrock:InvokeModel` would. Granting the
+  model ARNs to the `EvalJobRole` (the service role Bedrock assumes) wasn't enough; the caller's
+  own identity needs it too, since the caller is who actually calls `CreateEvaluationJob`. Failed
+  with `AccessDeniedException` naming the model's foundation-model ARN, not the evaluation-job one,
+  the first time this was submitted.
 
 ## 4. Enable Bedrock model access
 
