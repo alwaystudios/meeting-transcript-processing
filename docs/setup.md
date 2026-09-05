@@ -42,12 +42,30 @@ hadn't completed. Don't move to step 3 without this check passing.
 
 ## 3. Swap to the steady-state policy
 
-Copy `iam/steady-state-policy.json` to `iam/steady-state-policy.local.json` the same way, replace
-the placeholders, and attach it in place of the bootstrap policy. This is what stays attached
-long-term — `cdk deploy`/`cdk destroy`
-only need `sts:AssumeRole` on 4 of the bootstrap-created roles (the CLI does the actual
-CloudFormation work through the assumed `deploy-role`, not the caller's own permissions), plus
-direct Bedrock permissions for actually submitting evaluation jobs later.
+Copy `iam/steady-state-policy.json` to `iam/steady-state-policy.local.json` the same way and
+replace the placeholders. This is what stays attached long-term — `cdk deploy`/`cdk destroy` only
+need `sts:AssumeRole` on 4 of the bootstrap-created roles (the CLI does the actual CloudFormation
+work through the assumed `deploy-role`, not the caller's own permissions), plus direct Bedrock
+permissions for actually submitting and reading evaluation jobs later.
+
+**Attach this one as a customer-managed policy, not an inline policy** — it grew past the 2048
+character inline-policy limit partway through this session (each fix below added a statement) and
+will likely keep growing; a managed policy's 6144-character ceiling gives real headroom instead of
+trimming statement names for space. The bootstrap policy from step 1 is small enough to stay
+inline.
+
+```bash
+aws iam create-policy --policy-name meeting-transcript-eval-steady-state \
+  --policy-document file://iam/steady-state-policy.local.json
+# then attach the ARN it returns:
+aws iam attach-user-policy --user-name <your-user> --policy-arn <arn from above>
+```
+
+If you'd already attached an earlier, smaller version as an *inline* policy and are now hitting
+`Policy exceeding the 2048 characters limit can't be saved` when trying to update it — that's this
+same limit; switch to the managed-policy commands above instead of trying to shrink it further, and
+remove the old inline one (`aws iam delete-user-policy --user-name <your-user> --policy-name ...`)
+once the managed one is attached, so you're not carrying two.
 
 Three of this policy's statements exist because of real gaps found by actually running this, not
 foresight — each is worth understanding before you assume the policy is complete:

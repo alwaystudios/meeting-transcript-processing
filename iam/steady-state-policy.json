@@ -66,6 +66,15 @@
       "Resource": "*"
     },
     {
+      "Sid": "ReadEvaluationResults",
+      "Effect": "Allow",
+      "Action": ["s3:ListBucket", "s3:GetObject"],
+      "Resource": [
+        "arn:aws:s3:::meeting-transcript-eval-output-<ACCOUNT_ID>",
+        "arn:aws:s3:::meeting-transcript-eval-output-<ACCOUNT_ID>/*"
+      ]
+    },
+    {
       "Sid": "ReadStackOutputs",
       "Effect": "Allow",
       "Action": [
