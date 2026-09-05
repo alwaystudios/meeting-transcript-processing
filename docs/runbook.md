@@ -9,7 +9,12 @@ npx cdk deploy
 
 No AWS account or region is hardcoded — this deploys to whichever account/region your active AWS
 credentials point at. Note the four values in the `Outputs` section after deploy:
-`DatasetBucketName`, `OutputBucketName`, `EvalJobRoleArn`, `PromptArn`.
+`DatasetBucketName`, `OutputBucketName`, `EvalJobRoleArn`, `PromptArn`. If you didn't capture them
+at deploy time, fetch them again any time with:
+```bash
+aws cloudformation describe-stacks --stack-name MeetingTranscriptEvalHarness \
+  --query "Stacks[0].Outputs" --output table
+```
 
 ## Run an evaluation
 
@@ -25,9 +30,19 @@ assumption about deployment target. Instead:
    cp eval-jobs/golden-job.json eval-jobs/golden-job.local.json
    cp eval-jobs/edge-case-job.json eval-jobs/edge-case-job.local.json
    ```
-2. Edit the `.local.json` copies (not the originals) and replace the placeholders:
-   - `<EVAL_JOB_ROLE_ARN>` → the `EvalJobRoleArn` stack output.
-   - `<DATASET_BUCKET_NAME>` / `<OUTPUT_BUCKET_NAME>` → the corresponding stack outputs.
+2. Get all the values you need. Three of the five placeholders come straight off the stack:
+   ```bash
+   aws cloudformation describe-stacks --stack-name MeetingTranscriptEvalHarness \
+     --query "Stacks[0].Outputs" --output table
+   ```
+   The other two are Claude model IDs from the Bedrock catalog in your account/region — see
+   `docs/setup.md` step 4 for the `list-foundation-models` command if you haven't already run it.
+   Nothing here requires digging through the console; both commands are copy-pasteable.
+
+   Edit the `.local.json` copies (not the originals) and replace the placeholders:
+   - `<EVAL_JOB_ROLE_ARN>` → the `EvalJobRoleArn` value from the command above.
+   - `<DATASET_BUCKET_NAME>` / `<OUTPUT_BUCKET_NAME>` → the corresponding values from the same
+     command.
    - `<MODEL_UNDER_TEST_ID>` → whichever Claude model you've enabled Bedrock access for and want
      to test (the prompt itself is deployed already configured against the model ID passed as
      CDK context `-c modelUnderTestId=...`; this should match).
