@@ -1,0 +1,20 @@
+{
+  "name": "meeting-transcript-eval-infra",
+  "version": "1.0.0",
+  "private": true,
+  "description": "CDK infra for a Bedrock-native transcript extraction prompt evaluation (Prompt Management + Evaluation Jobs). No application/checking logic lives here by design.",
+  "scripts": {
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy --force",
+    "diff": "cdk diff"
+  },
+  "devDependencies": {
+    "aws-cdk": "^2.1140.0",
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.4.2",
+    "typescript": "^5.6.3",
+    "ts-node": "^10.9.2",
+    "@types/node": "^22.9.0"
+  }
+}

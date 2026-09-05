@@ -1,0 +1,21 @@
+{
+  "id": "golden-04-all-noise",
+  "description": "Edge case: entire transcript is vague discussion and explicitly dismissed asides — nothing should be extracted. Both actions and decisions must be empty arrays.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:03.000 --> 00:00:08.000\n<v Dana Osei>So today's just a check-in, nothing formal on the agenda.</v>\n\n00:00:08.500 --> 00:00:14.000\n<v Leo Fraser>Yeah I was thinking maybe we look at redesigning the whole nav bar at some point.</v>\n\n00:00:14.500 --> 00:00:19.000\n<v Dana Osei>Let's not open that can of worms today, just a thought for later.</v>\n\n00:00:19.500 --> 00:00:24.000\n<v Leo Fraser>Fair, nobody asked for it anyway. Just chatting.</v>\n\n00:00:24.500 --> 00:00:30.000\n<v Dana Osei>Cool, anything urgent? ... Nope. Ok, short one today, see you tomorrow.</v>\n",
+  "expected": {
+    "actions": [],
+    "decisions": []
+  },
+  "excludedFromExtraction": [
+    {
+      "quote": "Let's not open that can of worms today, just a thought for later.",
+      "reason": "Nav bar redesign is explicitly deferred as a stray thought, not agreed to — exactly the dismissed-aside pattern ('do not build X now')."
+    },
+    {
+      "quote": "Fair, nobody asked for it anyway. Just chatting.",
+      "reason": "Explicitly labeled as chat, not a decision."
+    }
+  ],
+  "notes": "This is the negative-case check: a plausible-sounding transcript that a weaker extractor might over-extract from (the nav bar redesign mention) but where correct behavior is two empty arrays. Directly exercises the prompt's dismissed-asides exclusion rule (see docs/operator-guide.md)."
+}

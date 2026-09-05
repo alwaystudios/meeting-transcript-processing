@@ -1,0 +1,48 @@
+{
+  "jobName": "transcript-extraction-golden",
+  "jobDescription": "Evaluate the transcript extraction prompt against the golden (clean-case) dataset.",
+  "roleArn": "<EVAL_JOB_ROLE_ARN>",
+  "evaluationConfig": {
+    "automated": {
+      "datasetMetricConfigs": [
+        {
+          "taskType": "General",
+          "dataset": {
+            "name": "transcript-extraction-golden",
+            "datasetLocation": {
+              "s3Uri": "s3://<DATASET_BUCKET_NAME>/datasets/golden.jsonl"
+            }
+          },
+          "metricNames": ["ExtractionCorrectness"]
+        }
+      ],
+      "customMetricConfig": {
+        "customMetrics": [
+          {
+            "customMetricDefinition": {
+              "name": "ExtractionCorrectness",
+              "instructions": "You are a strict evaluator for a meeting-transcript extraction system.\nYou are given the prompt sent to a generator model (extraction rules plus a transcript wrapped as untrusted content), the generator model's response, and a reference (human-validated) response for the same input. Assess whether the response matches the reference in substance.\nRate Pass only if: every genuine action or decision present in the reference appears in the response (minor rewording of title/content is fine, but each quote must still be an exact substring of the transcript), and the response includes nothing absent from the reference - no invented items, no over-extraction of chat, speculation, disagreement, or dismissed asides, no fabricated quotes.\nRate Fail if: the response omits a reference item, adds an item not in the reference, misclassifies an action as a decision or vice versa, or includes any quote not verbatim in the transcript.\nHere is the actual task:\nPrompt: {{prompt}}\nResponse: {{prediction}}\nReference: {{ground_truth}}",
+              "ratingScale": [
+                { "definition": "Matches reference: no invented, omitted, or misclassified items; every quote is verbatim.", "value": { "stringValue": "Pass" } },
+                { "definition": "Response omits/adds an item vs reference, misclassifies action/decision, or quote not verbatim.", "value": { "stringValue": "Fail" } }
+              ]
+            }
+          }
+        ],
+        "evaluatorModelConfig": {
+          "bedrockEvaluatorModels": [
+            { "modelIdentifier": "<JUDGE_MODEL_ID>" }
+          ]
+        }
+      }
+    }
+  },
+  "inferenceConfig": {
+    "models": [
+      { "bedrockModel": { "modelIdentifier": "<MODEL_UNDER_TEST_ID>" } }
+    ]
+  },
+  "outputDataConfig": {
+    "s3Uri": "s3://<OUTPUT_BUCKET_NAME>/results/golden/"
+  }
+}

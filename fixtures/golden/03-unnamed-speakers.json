@@ -1,0 +1,33 @@
+{
+  "id": "golden-03-unnamed-speakers",
+  "description": "Edge case: VTT captions with no <v Name> voice tags (auto-captions without speaker diarization). Timestamps present, but no speaker attribution anywhere. Tests that speaker is correctly omitted/empty rather than invented.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:02.000 --> 00:00:07.000\nWe should move the release date to next Friday since QA found two blockers.\n\n00:00:07.500 --> 00:00:12.000\nAgreed, let's push it to Friday. That's final.\n\n00:00:12.500 --> 00:00:18.000\nCan someone own the migration script cleanup? I can take it if nobody else wants it.\n\n00:00:18.500 --> 00:00:22.000\nGo for it, thanks.\n",
+  "expected": {
+    "actions": [
+      {
+        "title": "Clean up migration script",
+        "content": "One of the speakers will clean up the migration script since no one else volunteered.",
+        "quote": "I can take it if nobody else wants it.",
+        "speaker": "",
+        "timestamp": "00:12"
+      }
+    ],
+    "decisions": [
+      {
+        "title": "Push release date to Friday",
+        "content": "The release date moves to next Friday due to two QA blockers.",
+        "quote": "Agreed, let's push it to Friday. That's final.",
+        "speaker": "",
+        "timestamp": "00:07"
+      }
+    ]
+  },
+  "excludedFromExtraction": [
+    {
+      "quote": "Go for it, thanks.",
+      "reason": "Acknowledgement, not a separate action or decision."
+    }
+  ],
+  "notes": "Without <v Name> tags, the VTT cue-formatting step has no name to prefix, so the extraction model receives zero speaker signal in the cue text itself. speaker must be empty string per the prompt rule ('speaker and timestamp when the transcript has them; omit or empty string otherwise') rather than guessed from context."
+}

@@ -1,0 +1,40 @@
+{
+  "id": "golden-01-sprint-planning",
+  "description": "Normal case: clear actions and an explicit durable decision, named speakers, full VTT timestamps. Also includes closing chat that must not be extracted.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:04.000 --> 00:00:09.000\n<v Priya Shah>Let's start with the CSV export bug. Where are we?</v>\n\n00:00:09.500 --> 00:00:15.000\n<v Marcus Webb>I'll fix the CSV export bug by Thursday, I found the root cause already.</v>\n\n00:00:15.500 --> 00:00:20.000\n<v Priya Shah>Great. And I think we agreed v1 ships CSV only, not Excel, right?</v>\n\n00:00:20.500 --> 00:00:26.000\n<v Marcus Webb>Yes, that's locked in. Excel export is out of scope for v1.</v>\n\n00:00:26.500 --> 00:00:33.000\n<v Priya Shah>Perfect. Sofia, can you update the onboarding doc with the new login flow?</v>\n\n00:00:33.500 --> 00:00:38.000\n<v Sofia Nakamura>Sure, I'll update the onboarding doc today.</v>\n\n00:00:38.500 --> 00:00:44.000\n<v Priya Shah>Anything else? ... No? Ok let's wrap up.</v>\n",
+  "expected": {
+    "actions": [
+      {
+        "title": "Fix CSV export bug",
+        "content": "Marcus will fix the CSV export bug by Thursday.",
+        "quote": "I'll fix the CSV export bug by Thursday, I found the root cause already.",
+        "speaker": "Marcus Webb",
+        "timestamp": "00:09"
+      },
+      {
+        "title": "Update onboarding doc",
+        "content": "Sofia will update the onboarding doc today.",
+        "quote": "I'll update the onboarding doc today.",
+        "speaker": "Sofia Nakamura",
+        "timestamp": "00:33"
+      }
+    ],
+    "decisions": [
+      {
+        "title": "CSV-only v1 scope",
+        "content": "v1 ships CSV export only; Excel export is out of scope for v1.",
+        "quote": "Yes, that's locked in. Excel export is out of scope for v1.",
+        "speaker": "Marcus Webb",
+        "timestamp": "00:20"
+      }
+    ]
+  },
+  "excludedFromExtraction": [
+    {
+      "quote": "Anything else? ... No? Ok let's wrap up.",
+      "reason": "Meeting-close chatter, not a concrete action or durable decision."
+    }
+  ],
+  "notes": "Baseline clear-cut case: every extracted item has an explicit owner or explicit agreement language, and a directly quotable sentence. Timestamps use the [hh removed when 00] mm:ss format produced by the VTT cue-formatting step in src/prompt.ts."
+}

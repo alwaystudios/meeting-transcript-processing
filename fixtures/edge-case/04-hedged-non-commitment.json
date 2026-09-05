@@ -1,0 +1,9 @@
+{
+  "id": "edge-04-hedged-non-commitment",
+  "description": "A named person responds to a request with hedged, non-committal language.",
+  "ruleValidated": "Only concrete agreed actions (someone will do X) — hedged language does not meet the bar.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:05.000 --> 00:00:09.000\n<v Owen Ng>Someone really should look at that memory leak at some point.</v>\n\n00:00:09.500 --> 00:00:15.000\n<v Farah Aziz>I guess I could poke at it, no promises though, not sure I'll have time this week.</v>\n",
+  "expected": { "actions": [], "decisions": [] },
+  "notes": "Over-extraction trap: this has all the surface features of an action (a name, a task) but the actual language ('I guess', 'no promises', 'not sure I'll have time') is a hedge, not a commitment. A weak extractor keys on the presence of a name + task and extracts anyway; correct behavior is to drop it."
+}

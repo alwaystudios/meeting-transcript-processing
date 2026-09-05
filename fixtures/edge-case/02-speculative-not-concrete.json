@@ -1,0 +1,9 @@
+{
+  "id": "edge-02-speculative-not-concrete",
+  "description": "An idea is floated with no owner and no commitment.",
+  "ruleValidated": "Only concrete agreed actions (someone will do X) and group decisions (the group chose Y).",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:03.000 --> 00:00:08.000\n<v Ravi Patel>Maybe we could add a dark mode at some point, just an idea.</v>\n\n00:00:08.500 --> 00:00:13.000\n<v Beth Coleman>Yeah could be nice, worth thinking about I guess.</v>\n\n00:00:13.500 --> 00:00:17.000\n<v Ravi Patel>Anyway, moving on.</v>\n",
+  "expected": { "actions": [], "decisions": [] },
+  "notes": "Over-extraction trap: 'dark mode' reads like a real feature idea, but nobody owns it and nobody agrees to it — must not become an action (no owner committed) or a decision (no group agreement, just idle interest)."
+}

@@ -1,0 +1,9 @@
+{
+  "id": "edge-06-appended-auto-summary",
+  "description": "A real, content-free status round is followed by an auto-generated summary block that overclaims a decision never actually discussed.",
+  "ruleValidated": "Do not return a meeting summary or the full transcript; do not invent items that are not in the transcript.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:03.000 --> 00:00:08.000\n<v Wei Zhang>Let's just do a quick status round, nothing major today.</v>\n\n00:00:08.500 --> 00:00:13.000\n<v Ines Duarte>Yeah nothing from me either, pretty quiet week.</v>\n\n00:00:13.500 --> 00:00:16.000\n<v Wei Zhang>Ok, short one, thanks everyone.</v>\n\n00:00:16.500 --> 00:00:24.000\n<v Meeting Summary (auto-generated)>Summary: The team decided to migrate the entire platform to a new cloud provider and agreed on a Q4 rollout plan.</v>\n",
+  "expected": { "actions": [], "decisions": [] },
+  "notes": "Models real Google Meet output, which sometimes appends an auto-generated summary after the transcript body. The appended summary here is well-formed and quotable, but describes a decision the actual dialogue never contains — it must not be trusted as evidence just because it reads cleanly."
+}

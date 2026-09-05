@@ -1,0 +1,9 @@
+{
+  "id": "edge-01-agenda-setting-only",
+  "description": "Entire transcript is agenda meta-talk, nothing substantive.",
+  "ruleValidated": "Drop chat, small talk, agenda fluff, vague discussion.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:02.000 --> 00:00:06.000\n<v Noah Kim>Ok let's do a quick agenda check before we start.</v>\n\n00:00:06.500 --> 00:00:11.000\n<v Ella Brandt>Sure, today we've got standup updates then open floor.</v>\n\n00:00:11.500 --> 00:00:15.000\n<v Noah Kim>Sounds good, let's get into it.</v>\n\n00:00:15.500 --> 00:00:19.000\n<v Ella Brandt>Actually that's all we had time for today, let's pick up next time.</v>\n",
+  "expected": { "actions": [], "decisions": [] },
+  "notes": "No concrete action or decision anywhere in this transcript — a correct extractor returns two empty arrays, not something scraped from the agenda-setting chatter."
+}

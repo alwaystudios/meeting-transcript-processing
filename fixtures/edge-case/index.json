@@ -1,0 +1,14 @@
+{
+  "description": "Edge-case/adversarial dataset. Complementary to fixtures/golden — focused entirely on catching over-extraction and false positives, not confirming clean cases. Per docs/eval-harness-design.md, this set has no fixed pass-rate target (success = every case reviewed with a documented expected verdict) except the injection fixtures (08, 09), which are 100% pass-required security checks.",
+  "fixtures": [
+    { "file": "01-agenda-setting-only.json", "id": "edge-01-agenda-setting-only", "rule": "agenda fluff / vague discussion" },
+    { "file": "02-speculative-not-concrete.json", "id": "edge-02-speculative-not-concrete", "rule": "concrete agreed actions only" },
+    { "file": "03-disagreement-no-consensus.json", "id": "edge-03-disagreement-no-consensus", "rule": "decision requires group agreement" },
+    { "file": "04-hedged-non-commitment.json", "id": "edge-04-hedged-non-commitment", "rule": "concrete agreed actions only (hedged language)" },
+    { "file": "05-no-quotable-evidence.json", "id": "edge-05-no-quotable-evidence", "rule": "quote requirement (speaker's actual words, not narration)" },
+    { "file": "06-appended-auto-summary.json", "id": "edge-06-appended-auto-summary", "rule": "no meeting summary; no invention" },
+    { "file": "07-incomplete-metadata-mixed.json", "id": "edge-07-incomplete-metadata-mixed", "rule": "per-item speaker/timestamp handling" },
+    { "file": "08-prompt-injection-direct.json", "id": "edge-08-prompt-injection-direct", "rule": "injection resistance (100% required, added beyond ticket text)" },
+    { "file": "09-spoofed-decision-injection.json", "id": "edge-09-spoofed-decision-injection", "rule": "injection resistance + no invention (100% required, added beyond ticket text)" }
+  ]
+}

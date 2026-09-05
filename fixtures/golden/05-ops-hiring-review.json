@@ -1,0 +1,40 @@
+{
+  "id": "golden-05-ops-hiring-review",
+  "description": "Second normal case, different domain (ops/hiring rather than engineering) for diversity: mix of an action, a reversed-plan decision, and a durable constraint restated/reconfirmed mid-meeting.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:05.000 --> 00:00:10.000\n<v Jordan Blake>Let's talk hiring. Where's the backend role at?</v>\n\n00:00:10.500 --> 00:00:16.000\n<v Amira Khan>I'll send the updated job spec to the recruiter by end of day.</v>\n\n00:00:16.500 --> 00:00:21.000\n<v Jordan Blake>Good. Also, are we still doing the Friday all-hands?</v>\n\n00:00:21.500 --> 00:00:26.000\n<v Amira Khan>Actually let's drop the Friday all-hands, attendance has been low, not worth it right now.</v>\n\n00:00:26.500 --> 00:00:31.000\n<v Jordan Blake>Fine by me. One more thing, we decided last week budget stays capped at two new hires this quarter, just confirming that still stands.</v>\n\n00:00:31.500 --> 00:00:36.000\n<v Amira Khan>Yes, that's still the cap, two hires max this quarter.</v>\n\n00:00:36.500 --> 00:00:40.000\n<v Jordan Blake>Great, that's everything, thanks all.</v>\n",
+  "expected": {
+    "actions": [
+      {
+        "title": "Send job spec to recruiter",
+        "content": "Amira will send the updated backend job spec to the recruiter by end of day.",
+        "quote": "I'll send the updated job spec to the recruiter by end of day.",
+        "speaker": "Amira Khan",
+        "timestamp": "00:10"
+      }
+    ],
+    "decisions": [
+      {
+        "title": "Drop Friday all-hands",
+        "content": "The Friday all-hands is dropped due to low attendance.",
+        "quote": "Actually let's drop the Friday all-hands, attendance has been low, not worth it right now.",
+        "speaker": "Amira Khan",
+        "timestamp": "00:21"
+      },
+      {
+        "title": "Hiring cap: two hires this quarter",
+        "content": "Hiring budget stays capped at two new hires this quarter.",
+        "quote": "Yes, that's still the cap, two hires max this quarter.",
+        "speaker": "Amira Khan",
+        "timestamp": "00:31"
+      }
+    ]
+  },
+  "excludedFromExtraction": [
+    {
+      "quote": "Great, that's everything, thanks all.",
+      "reason": "Meeting-close chatter, not a concrete action or decision."
+    }
+  ],
+  "notes": "Tests two distinct decision shapes in one transcript: a reversal of an existing plan (dropping the all-hands) and a reconfirmed durable constraint carried over from a prior meeting (hiring cap) — both should be extracted as decisions, matching the prompt's 'keep lasting constraints' rule."
+}

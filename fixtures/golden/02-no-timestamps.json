@@ -1,0 +1,37 @@
+{
+  "id": "golden-02-no-timestamps",
+  "description": "Edge case: transcript with no timestamp information at all (plain text, e.g. pasted from a doc rather than exported as VTT/captions). Named speakers present. Tests that timestamp is correctly omitted/empty rather than invented.",
+  "sourceFormat": "txt",
+  "rawTranscript": "Priya: We need to migrate the billing service before end of quarter.\nMarcus: I can own that, I'll start the migration plan next week.\nPriya: Agreed, let's lock that in as the Q3 priority.\nMarcus: Sounds good.\nPriya: Anyone want to also revisit the pricing page copy?\nSofia: Not now, let's not open that can of worms this sprint.\nPriya: Fair, skip it for now.\n",
+  "expected": {
+    "actions": [
+      {
+        "title": "Start billing migration plan",
+        "content": "Marcus will start the billing service migration plan next week.",
+        "quote": "I'll start the migration plan next week.",
+        "speaker": "Marcus",
+        "timestamp": ""
+      }
+    ],
+    "decisions": [
+      {
+        "title": "Q3 priority: billing migration",
+        "content": "Billing service migration is locked in as the Q3 priority.",
+        "quote": "Agreed, let's lock that in as the Q3 priority.",
+        "speaker": "Priya",
+        "timestamp": ""
+      }
+    ]
+  },
+  "excludedFromExtraction": [
+    {
+      "quote": "Not now, let's not open that can of worms this sprint.",
+      "reason": "Dismissed aside about pricing page copy — explicitly deferred, not a decision."
+    },
+    {
+      "quote": "Fair, skip it for now.",
+      "reason": "Agreement to drop the topic, not an agreed action or durable decision."
+    }
+  ],
+  "notes": "This fixture interprets 'incomplete timestamps' as the extreme case: no timestamp signal anywhere in the source. Plain .txt input bypasses VTT cue formatting entirely (decodeRawTranscript in src/prompt.ts returns raw text unmodified for non-VTT sources), so the model has no timestamps to report and per the prompt rule must omit/empty the field rather than fabricate one."
+}
