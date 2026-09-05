@@ -1,0 +1,22 @@
+{
+  "name": "meeting-transcript-eval-harness",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bedrock LLM-as-judge evaluation harness for the meeting transcript extraction prompt.",
+  "type": "module",
+  "scripts": {
+    "eval": "tsx src/run-eval.ts",
+    "eval:dry-run": "tsx src/run-eval.ts --dry-run",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test src/*.test.ts"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.700.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "@types/node": "^22.9.0"
+  }
+}

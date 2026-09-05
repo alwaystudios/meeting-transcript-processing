@@ -1,0 +1,28 @@
+{
+  "id": "edge-07-incomplete-metadata-mixed",
+  "description": "Within one transcript, one cue has full speaker attribution and another has none (diarization dropped mid-call) — a real action and a real decision, one of each metadata shape.",
+  "ruleValidated": "speaker and timestamp when the transcript has them; omit or empty string otherwise.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:04.000 --> 00:00:09.000\n<v Aiden Cross>I'll update the deployment runbook by Monday.</v>\n\n00:00:09.500 --> 00:00:14.000\nWe agreed to freeze the API for the next two weeks.\n\n00:00:14.500 --> 00:00:19.000\n<v Aiden Cross>Sounds right.</v>\n",
+  "expected": {
+    "actions": [
+      {
+        "title": "Update deployment runbook",
+        "content": "Aiden will update the deployment runbook by Monday.",
+        "quote": "I'll update the deployment runbook by Monday.",
+        "speaker": "Aiden Cross",
+        "timestamp": "00:04"
+      }
+    ],
+    "decisions": [
+      {
+        "title": "Freeze API for two weeks",
+        "content": "The API is frozen for the next two weeks.",
+        "quote": "We agreed to freeze the API for the next two weeks.",
+        "speaker": "",
+        "timestamp": "00:09"
+      }
+    ]
+  },
+  "notes": "Unlike the golden-set fixtures (uniform metadata per transcript), this checks per-item metadata handling within a single transcript — one cue keeps its <v Name> tag, the next has none. Output must reflect that difference per item rather than applying one metadata rule to the whole transcript."
+}

@@ -1,0 +1,9 @@
+{
+  "id": "edge-05-no-quotable-evidence",
+  "description": "The only description of an action is a bracketed narrator/notes-style annotation, not a participant's actual spoken words.",
+  "ruleValidated": "quote is required: the speaker's exact words that evidence the item. Drop the item if you cannot quote it.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:02.000 --> 00:00:05.000\n<v Meeting Notes>[Off-mic discussion — Priya to follow up on the invoice issue offline.]</v>\n\n00:00:05.500 --> 00:00:10.000\n<v Priya Shah>Ok, moving on to the next item.</v>\n",
+  "expected": { "actions": [], "decisions": [] },
+  "notes": "Deliberately subtle: the bracketed annotation is technically an exact substring of the transcript, so a purely deterministic quote-containment check would pass it. The actual rule requires the quote to be a speaker's exact words evidencing the item — a '[Meeting Notes]' stage direction describing an off-mic conversation is not a participant speaking on the record, so this should still be dropped. This is exactly the kind of case that needs the LLM judge (see docs/eval-harness-design.md) rather than a string-containment check alone."
+}

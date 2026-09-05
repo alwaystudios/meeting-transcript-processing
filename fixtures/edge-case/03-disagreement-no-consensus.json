@@ -1,0 +1,9 @@
+{
+  "id": "edge-03-disagreement-no-consensus",
+  "description": "A proposal is raised, disputed, and explicitly parked rather than adopted.",
+  "ruleValidated": "A decision is a durable product choice the group agreed to keep.",
+  "sourceFormat": "vtt",
+  "rawTranscript": "WEBVTT\n\n00:00:04.000 --> 00:00:09.000\n<v Tomas Reyes>I think we should switch the queue to SQS.</v>\n\n00:00:09.500 --> 00:00:14.000\n<v Grace Lin>Disagree, I'd rather stick with our current setup, it's working fine.</v>\n\n00:00:14.500 --> 00:00:19.000\n<v Tomas Reyes>Ok let's park it, we can revisit if it becomes a real problem.</v>\n",
+  "expected": { "actions": [], "decisions": [] },
+  "notes": "Over-extraction trap: a specific, plausible-sounding technical proposal (SQS) is on the table, but the group explicitly disagrees and parks it rather than adopting it — no decision was reached, so neither array should contain it."
+}

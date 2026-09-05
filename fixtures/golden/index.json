@@ -1,0 +1,10 @@
+{
+  "description": "Golden dataset. Clear-cut transcript examples with manually validated expected extractions, for the eval harness's ~95% pass-rate golden-set threshold (see docs/eval-harness-design.md).",
+  "fixtures": [
+    { "file": "01-sprint-planning.json", "id": "golden-01-sprint-planning", "category": "normal" },
+    { "file": "02-no-timestamps.json", "id": "golden-02-no-timestamps", "category": "edge-case: missing timestamps" },
+    { "file": "03-unnamed-speakers.json", "id": "golden-03-unnamed-speakers", "category": "edge-case: unnamed speakers" },
+    { "file": "04-all-noise.json", "id": "golden-04-all-noise", "category": "edge-case: vague discussion, nothing extractable" },
+    { "file": "05-ops-hiring-review.json", "id": "golden-05-ops-hiring-review", "category": "normal (different domain)" }
+  ]
+}
