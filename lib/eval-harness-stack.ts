@@ -27,7 +27,11 @@ export class EvalHarnessStack extends cdk.Stack {
 
     const modelUnderTestId = this.node.tryGetContext("modelUnderTestId") ?? "REPLACE_WITH_ENABLED_MODEL_ID"
 
+    // Explicit, deterministic names (rather than CDK's auto-generated ones) so an IAM policy can
+    // reference exact resource ARNs instead of a wildcard guess — see docs/runbook.md's minimal
+    // IAM policy.
     const datasetBucket = new s3.Bucket(this, "DatasetBucket", {
+      bucketName: `meeting-transcript-eval-dataset-${cdk.Aws.ACCOUNT_ID}`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       enforceSSL: true,
@@ -35,6 +39,7 @@ export class EvalHarnessStack extends cdk.Stack {
     })
 
     const outputBucket = new s3.Bucket(this, "OutputBucket", {
+      bucketName: `meeting-transcript-eval-output-${cdk.Aws.ACCOUNT_ID}`,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
       enforceSSL: true,
@@ -49,6 +54,7 @@ export class EvalHarnessStack extends cdk.Stack {
     })
 
     const evalJobRole = new iam.Role(this, "EvalJobRole", {
+      roleName: "meeting-transcript-eval-job-role",
       assumedBy: new iam.ServicePrincipal("bedrock.amazonaws.com", {
         conditions: {
           StringEquals: { "aws:SourceAccount": cdk.Aws.ACCOUNT_ID },
