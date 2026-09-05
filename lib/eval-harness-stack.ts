@@ -69,10 +69,11 @@ export class EvalHarnessStack extends cdk.Stack {
       new iam.PolicyStatement({
         sid: "InvokeClaudeModelsForEval",
         actions: ["bedrock:InvokeModel", "bedrock:InvokeModelWithResponseStream"],
-        resources: [
-          `arn:aws:bedrock:${cdk.Aws.REGION}::foundation-model/anthropic.claude-*`,
-          `arn:aws:bedrock:${cdk.Aws.REGION}:${cdk.Aws.ACCOUNT_ID}:inference-profile/*.anthropic.claude-*`,
-        ],
+        // Resource: "*", not a scoped model ARN pattern. A scoped foundation-model/inference-profile
+        // ARN here produced "does not have permission to call the model" from CreateEvaluationJob's
+        // own validation, confirmed by testing — matches the same scoped-ARN limitation found on
+        // the caller's own CreateEvaluationJob permission (see docs/setup.md).
+        resources: ["*"],
       }),
     )
 

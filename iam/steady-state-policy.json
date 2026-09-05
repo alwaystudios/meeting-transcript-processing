@@ -27,10 +27,7 @@
       "Sid": "CreateEvaluationJobOnModels",
       "Effect": "Allow",
       "Action": "bedrock:CreateEvaluationJob",
-      "Resource": [
-        "arn:aws:bedrock:<REGION>::foundation-model/anthropic.claude-*",
-        "arn:aws:bedrock:<REGION>:<ACCOUNT_ID>:inference-profile/*.anthropic.claude-*"
-      ]
+      "Resource": "*"
     },
     {
       "Sid": "PassEvalJobRoleToBedrock",
@@ -55,6 +52,16 @@
         "bedrock:GetFoundationModel",
         "bedrock:ListInferenceProfiles",
         "bedrock:GetInferenceProfile"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ManageApplicationInferenceProfiles",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:CreateInferenceProfile",
+        "bedrock:DeleteInferenceProfile",
+        "bedrock:TagResource"
       ],
       "Resource": "*"
     },

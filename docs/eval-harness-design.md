@@ -40,6 +40,13 @@ code-guaranteed. That's the direct cost of zero bespoke code: the judge could oc
 mis-rate something a deterministic check never would have gotten wrong. Sample job results
 periodically rather than trusting the aggregate pass rate blindly, especially early on.
 
+**A real constraint hit while wiring this up, not documented in the CLI help text**: each
+`ratingScale[].definition` string has a hard 100-character limit, enforced server-side
+(`ValidationException`, not visible from `aws bedrock create-evaluation-job help`). The `Pass`/
+`Fail` definitions in `eval-jobs/golden-job.json` are deliberately terse for this reason — if you
+rewrite them, keep them under 100 characters, and check the actual API response if you're unsure
+rather than trusting the CLI help text as the complete schema.
+
 ## Datasets
 
 `datasets/golden.jsonl` and `datasets/edge-case.jsonl` — one row per fixture, each row containing
@@ -55,6 +62,15 @@ JSONL files are what the evaluation job actually reads.
 **Judge model: a separate, stronger model than the one under test** (`<JUDGE_MODEL_ID>` in
 `eval-jobs/*.json`, wired to `customMetricConfig.evaluatorModelConfig.bedrockEvaluatorModels`) —
 deliberately different from the model under test to avoid same-model self-preference bias.
+
+Bedrock restricts which models are usable as a custom-metrics judge (a separate, shorter allowlist
+than the general model catalog — confirmed against AWS's own docs, not assumed). As of writing,
+`anthropic.claude-sonnet-5` and `anthropic.claude-opus-5` are **not** on that list yet — a
+`ValidationException` naming the model as unsupported is what actually surfaces this, not a
+model-access or IAM problem. The strongest currently-supported option is
+**Claude Opus 4.8** (`anthropic.claude-opus-4-8`) — use that instead until Bedrock's allowlist
+catches up to the newer generation. Recheck the "Supported evaluator models (custom metrics)" list
+in AWS's model evaluation docs before assuming a newer model works.
 
 **Cost tracking: none.** No token/cost ledger — Bedrock Evaluation Jobs bill directly; use the
 AWS Cost Explorer / Billing console if spend needs tracking, rather than building a parallel
