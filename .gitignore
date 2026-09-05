@@ -7,3 +7,6 @@ cdk.context.json
 # Templates with <PLACEHOLDER> tokens stay tracked; only the *.local.json copies are gitignored.
 eval-jobs/*.local.json
 iam/*.local.json
+
+# Generated eval reports (scripts/build-eval-report.py output) - never checked in.
+reports/

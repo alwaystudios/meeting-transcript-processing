@@ -76,6 +76,23 @@ assumption about deployment target. Instead:
      `iam/steady-state-policy.json`'s `ReadEvaluationResults` statement) — a gap found the first
      time this was actually tried, since only the service role had read access before that.
 
+## Reading results as an HTML report
+
+Raw JSONL is workable but not pleasant to read case-by-case. `scripts/build-eval-report.py`
+builds a self-contained HTML page from one or more completed job ARNs — transcript, model
+response, and the judge's full reasoning per fixture:
+
+```bash
+python3 scripts/build-eval-report.py <job-arn> [<job-arn> ...] [--out reports/eval-report.html]
+```
+
+Pass one job ARN for a single run's results, or several (in the order you want compared, e.g.
+before/after a prompt change) to see a per-fixture version comparison — exactly what you'd want
+after the "validating a prompt change" loop below. Needs only the AWS CLI and Python 3's standard
+library — no extra packages, and it doesn't call or depend on any AI model itself; it just formats
+results Bedrock already produced. Output goes to `reports/` by default, which is gitignored —
+generated reports are never meant to be committed, only the script that builds them.
+
 ## What constitutes a pass
 
 - **Golden set** (`datasets/golden.jsonl`): every row should rate `Pass`. Any `Fail` is a real bug
