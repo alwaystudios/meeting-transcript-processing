@@ -5,8 +5,10 @@
 Same relationship as the golden set (`docs/golden-dataset.md`): `fixtures/edge-case/*.json` is
 the human-readable documentation (raw transcript, the specific rule each case validates), and
 `datasets/edge-case.jsonl` is the machine-consumable form the evaluation job actually reads —
-same schema, `referenceResponse` always `{"actions":[],"decisions":[]}` for this set by design.
-Update both if you add or change a fixture.
+same schema, `referenceResponse` empty arrays for most rows by design (not all — `edge-07` has
+real items). Update both if you add or change a fixture. If you change the extraction prompt
+itself, re-render every JSONL row's `prompt` field too — the evaluation job sends that string to
+the model and does not call the Bedrock Prompt ARN (see `docs/runbook.md`).
 
 ## Purpose, and how this differs from the golden set
 

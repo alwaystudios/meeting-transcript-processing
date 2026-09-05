@@ -10,7 +10,9 @@ results Bedrock already produced — it doesn't touch the evaluation itself.
 ## What's here
 
 - `prompt/system-prompt.txt`, `prompt/user-message-template.txt` — the extraction prompt, as
-  plain text. This is the only thing you edit to change prompt behavior.
+  plain text. Edit these to change prompt behavior, then re-render `datasets/*.jsonl` before
+  redeploying — evaluation jobs send each row's `prompt` field to the model; they do not invoke
+  the Bedrock Prompt resource. See `docs/runbook.md`.
 - `lib/eval-harness-stack.ts`, `bin/app.ts` — the CDK stack: a Bedrock Prompt resource built from
   the files above, two S3 buckets (dataset + output, both destroy-on-delete), and the IAM role
   Bedrock Evaluation Jobs assume.

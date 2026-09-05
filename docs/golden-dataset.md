@@ -14,7 +14,10 @@
   expected JSON extraction. This is what the evaluation job actually reads from S3.
 
 If you add or change a fixture, update both files — there's no code linking them, so keeping them
-in sync is manual.
+in sync is manual. If you change `prompt/system-prompt.txt` or `prompt/user-message-template.txt`,
+re-render every JSONL row's `prompt` field as well (new system text + the same wrapped
+transcript). The evaluation job sends that field to the model; it does not invoke the Bedrock
+Prompt resource. See `docs/runbook.md` ("Validating a prompt change").
 
 ## Why synthetic, and why this shape
 
