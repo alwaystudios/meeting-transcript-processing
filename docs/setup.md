@@ -126,6 +126,16 @@ and need different fixes. In the order you're likely to hit them:
    judge model specifically must support on-demand invocation directly (or via the built-in
    cross-region profile) — you can't paper over a judge model's on-demand limitation with a
    custom profile the way you sometimes can for the generator model.
+6. **Even a model that's enabled and invokable may have a default account throughput quota too
+   low to run a job at all.** A 5-row golden job failed with `Encountered throttling exception
+   while serving the request for model ...` — confirmed genuinely account-level, not a config or
+   concurrency issue, by retrying the identical job alone (no other job running) and getting the
+   exact same failure. Fresh AWS accounts commonly start with minimal default Bedrock throughput
+   quotas before usage history builds up. **The fix is a Service Quotas increase request, not
+   anything in this repo or IAM policy**: console → **Service Quotas** → search **Amazon Bedrock**
+   → find the on-demand requests-per-minute (or tokens-per-minute) quota for your chosen model →
+   request an increase. This is the one failure mode in this whole setup that can't be resolved by
+   changing code, IAM, or job config — only by AWS raising the account's own limit.
 
 **Practical upshot: don't fight cross-region profiles if you don't have to.** The fastest path to
 a working setup is testing candidate models with a plain bare model ID first (older, more
