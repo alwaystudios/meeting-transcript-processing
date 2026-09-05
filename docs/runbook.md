@@ -93,7 +93,15 @@ before/after a prompt change) to see a per-fixture version comparison — exactl
 after the "validating a prompt change" loop below. Needs only the AWS CLI and Python 3's standard
 library — no extra packages, and it doesn't call or depend on any AI model itself; it just formats
 results Bedrock already produced. Output goes to `reports/` by default, which is gitignored —
-generated reports are never meant to be committed, only the script that builds them.
+local rebuilds stay off git.
+
+The shareable copy is `published/eval-report.html`. That file is tracked and deployed to GitHub
+Pages as https://alwaystudios.github.io/meeting-transcript-processing/. To refresh the public
+page after a new eval run, write the report there and merge:
+
+```bash
+python3 scripts/build-eval-report.py <job-arn> [<job-arn> ...] --out published/eval-report.html
+```
 
 ## What constitutes a pass
 

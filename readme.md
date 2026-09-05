@@ -7,6 +7,8 @@ run this; the prompt and datasets are plain data files, and running an evaluatio
 CLI call. The one deliberate exception is `scripts/build-eval-report.py`, a report generator for
 results Bedrock already produced — it doesn't touch the evaluation itself.
 
+**Latest eval report:** https://alwaystudios.github.io/meeting-transcript-processing/
+
 ## What's here
 
 - `prompt/system-prompt.txt`, `prompt/user-message-template.txt` — the extraction prompt, as
@@ -35,7 +37,9 @@ results Bedrock already produced — it doesn't touch the evaluation itself.
 - `docs/runbook.md` — deploy, run an evaluation, read results, tear down.
 - `scripts/build-eval-report.py` — turns one or more completed job ARNs into a readable HTML
   report (transcript, response, judge reasoning per fixture, with a version-comparison view across
-  multiple runs). Plain Python 3 + the AWS CLI, no other dependencies. Output is gitignored.
+  multiple runs). Plain Python 3 + the AWS CLI, no other dependencies. Local output is gitignored
+  (`reports/`); the public snapshot is `published/eval-report.html`.
+- `published/eval-report.html` — the checked-in report GitHub Pages serves.
 
 ## Quick start
 
