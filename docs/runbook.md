@@ -1,60 +1,82 @@
-# Evaluation harness runbook
+# Evaluation runbook
 
-## When and how the harness runs
+## Deploy the infrastructure
 
-- **On-demand**, any time `src/prompt.ts` (the prompt under test) changes. This is the primary
-  use case right now — there's no CI or deployed n8n router yet.
-- **Before any prompt change ships** to wherever it's actually used (the eventual n8n router),
-  this harness is the gate, not a suggestion. Nothing here auto-deploys anything.
-- **As a CI check**, once the dedicated eval AWS account has deploy keys set up: add a workflow
-  step running `npm ci && npm run eval -- --dataset=all`, gated on credentials scoped to that
-  account. The harness already exits non-zero on any failure, so a CI step just needs to fail
-  the build on that exit code — no extra wiring needed on the harness side.
+```bash
+npm install
+npx cdk deploy
+```
 
-## Who owns success
+No AWS account or region is hardcoded — this deploys to whichever account/region your active AWS
+credentials point at. Note the four values in the `Outputs` section after deploy:
+`DatasetBucketName`, `OutputBucketName`, `EvalJobRoleArn`, `PromptArn`.
 
-**Gary Alway** — sole owner of this project currently (settled in `docs/eval-harness-design.md`).
-"Prompt owner" and "n8n team" aren't yet separate roles because there's no n8n implementation and
-no second person on this work yet; this section should be revisited once either changes.
+## Run an evaluation
+
+Evaluation Jobs are not a CDK-deployed resource (Bedrock doesn't expose them as a CloudFormation
+resource type) — running one is a plain AWS CLI call using the templates in `eval-jobs/`:
+
+1. Copy `eval-jobs/golden-job.json` and `eval-jobs/edge-case-job.json`, and replace the
+   placeholders:
+   - `<EVAL_JOB_ROLE_ARN>` → the `EvalJobRoleArn` stack output.
+   - `<DATASET_BUCKET_NAME>` / `<OUTPUT_BUCKET_NAME>` → the corresponding stack outputs.
+   - `<MODEL_UNDER_TEST_ID>` → whichever Claude model you've enabled Bedrock access for and want
+     to test (the prompt itself is deployed already configured against the model ID passed as
+     CDK context `-c modelUnderTestId=...`; this should match).
+   - `<JUDGE_MODEL_ID>` → a different, stronger model than the one under test (see
+     `docs/eval-harness-design.md` for why).
+2. Submit each job:
+   ```bash
+   aws bedrock create-evaluation-job --cli-input-json file://eval-jobs/golden-job.json
+   aws bedrock create-evaluation-job --cli-input-json file://eval-jobs/edge-case-job.json
+   ```
+3. Check status:
+   ```bash
+   aws bedrock get-evaluation-job --job-identifier <jobArn from the create response>
+   ```
+4. Once `status` is `Completed`, read the results from the output bucket at the `s3Uri` prefix
+   you set in the job config (`results/golden/` / `results/edge-case/`).
+
+**Not yet validated end-to-end**: the exact shape of the results Bedrock writes to that S3 prefix
+hasn't been confirmed against a real run. The job submission schema above is confirmed directly
+from `aws bedrock create-evaluation-job help` on this machine's AWS CLI — the input side is solid.
+The first real run against a live account is what confirms the output/report format; expect to
+adjust how results get read once that happens, not the job submission itself.
 
 ## What constitutes a pass
 
-- **Golden set** (`fixtures/golden/`): every fixture must pass — schema, quote-fidelity, and the
-  judge's classification-correctness verdict. `docs/eval-harness-design.md` sets a ≥95% target,
-  which in practice means "all of them" until the set is large enough for that threshold to
-  differ from 100%.
-- **Edge-case set** (`fixtures/edge-case/`): the empty-expected check must pass 100% — no
-  exceptions, no borderline calls. This is strictest for the two injection-resistance fixtures
-  (`edge-08`, `edge-09`): a failure there means the untrusted-content wrap didn't hold, which is a
-  security regression, not a quality nitpick, and blocks shipping the change outright.
+- **Golden set** (`datasets/golden.jsonl`): every row should rate `Pass`. Any `Fail` is a real bug
+  in the prompt or a bad fixture, not noise.
+- **Edge-case set** (`datasets/edge-case.jsonl`): every row should rate `Pass` — no exceptions, no
+  borderline calls, especially rows `edge-08`/`edge-09` (prompt-injection resistance): a `Fail`
+  there means the untrusted-content wrap didn't hold, which is a security regression, not a
+  quality nitpick.
 
-## Runbook: validating a prompt change (no specialist knowledge required)
+## Validating a prompt change
 
-1. Edit `src/prompt.ts`.
-2. Run `npm run eval -- --dataset=all --verbose` (needs AWS credentials for the eval account —
-   `AWS_PROFILE=<eval-account-profile>` or equivalent env vars; region defaults to `eu-west-2`,
-   override with `AWS_REGION`).
-3. Read the printed pass count, and the ❌ lines for anything that failed — each names the exact
-   check (`schema`, `quote-fidelity`, `empty-expected`, or `judge`) and why.
-4. **Golden fixture failed:** the prompt regressed on a case that used to work. Fix the prompt.
-   If the fixture's own expectation turns out to be wrong, fix the fixture instead — but say why
-   in its `notes` field, don't silently loosen it.
-5. **Edge-case fixture failed:** treat as blocking, always — especially `edge-08`/`edge-09`. Do
-   not ship the prompt change until it passes.
-6. Full JSON + Markdown reports land in `reports/<run-id>.{json,md}` (gitignored — these are run
-   artifacts, not source).
+1. Edit `prompt/system-prompt.txt` and/or `prompt/user-message-template.txt`.
+2. Redeploy: `npx cdk deploy` (updates the Bedrock Prompt resource in place).
+3. Re-run both evaluation jobs (see above) and check the results.
+4. **Golden row fails:** the prompt regressed on a case that used to work. Fix the prompt. If the
+   fixture's own expectation turns out wrong, fix the fixture instead (`fixtures/golden/*.json`
+   docs plus the matching `datasets/golden.jsonl` row) — but say why in its `notes` field.
+5. **Edge-case row fails:** treat as blocking, always. Do not ship the prompt change until it
+   passes.
 
-Before real AWS credentials exist, `npm run eval:dry-run` smoke-tests the harness plumbing itself
-(fixture loading → checks → report) using each fixture's own expected output as a stand-in
-candidate — it does not validate the prompt and always passes trivially; it only proves the
-harness runs.
+## Tearing down
+
+```bash
+npx cdk destroy
+```
+
+Both S3 buckets are `RemovalPolicy.DESTROY` with `autoDeleteObjects` — this leaves nothing behind.
+The Bedrock Prompt resource is destroyed with the stack. Nothing here needs manual cleanup, unlike
+a stack holding real customer data.
 
 ## Feedback loop
 
-Failing case → fix `src/prompt.ts` → rerun → repeat. If a genuinely new failure mode shows up in
-production use later, add it as a new fixture (golden if it should extract cleanly, edge-case if
-it should extract nothing) rather than only fixing the prompt — the dataset is meant to grow as
-real failure modes are discovered, not stay frozen at today's 14 fixtures.
-
-Per `docs/eval-harness-design.md`, Gary also samples judge rationale on golden-set passes
-periodically (not just failures) to catch judge drift before it hides a real regression.
+Failing row → edit the prompt files → redeploy → re-run → repeat. If a genuinely new failure mode
+shows up in real use later, add it as a new fixture (`fixtures/golden/` if it should extract
+cleanly, `fixtures/edge-case/` if it should extract nothing) and its corresponding `datasets/*.jsonl`
+row — the dataset is meant to grow as real failure modes are discovered, not stay frozen at
+today's 14 cases.

@@ -1,59 +1,50 @@
-# Meeting Transcript Extraction Eval Harness
+# Meeting Transcript Extraction Eval
 
-A Bedrock LLM-as-judge evaluation harness for a prompt that extracts meeting actions and
-decisions from Google Meet transcripts. It validates the prompt against a golden dataset (clean
-cases) and an adversarial edge-case dataset (over-extraction traps and prompt-injection
-resistance), and produces a structured pass/fail report.
+CDK infrastructure for evaluating a prompt that extracts meeting actions and decisions from
+Google Meet transcripts, using Amazon Bedrock's native Prompt Management and Evaluation Jobs.
+Zero application code — the only code here is the CDK stack; the prompt and datasets are plain
+data files, and running an evaluation is a single AWS CLI call.
 
 ## What's here
 
-- `src/prompt.ts` — the extraction prompt under test, plus the WebVTT decoding and
-  untrusted-content wrap it depends on. Self-contained: change the prompt here, nothing else
-  needs updating for that.
-- `src/run-eval.ts` — the CLI entrypoint. See `docs/runbook.md` for how to use it.
-- `src/checks.ts`, `src/judge.ts`, `src/bedrock.ts`, `src/report.ts` — the harness internals:
-  deterministic checks, the Bedrock LLM judge, the Bedrock client, and report generation.
-- `fixtures/golden/` — clean-case transcripts with manually validated expected extractions.
-- `fixtures/edge-case/` — adversarial transcripts (over-extraction traps, injection attempts) that
-  should extract nothing, or only part of what's present.
-- `docs/operator-guide.md` — plain-language guide to the extraction rules, for anyone reviewing
-  why an item was or wasn't extracted.
-- `docs/eval-harness-design.md` — the harness's design: what it checks, deterministic vs. judged,
-  success criteria, and the decisions behind them (judge model choice, review process).
-- `docs/golden-dataset.md` / `docs/edge-case-dataset.md` — what each fixture set covers.
-- `docs/runbook.md` — when and how to run the harness, what constitutes a pass, the feedback loop.
+- `prompt/system-prompt.txt`, `prompt/user-message-template.txt` — the extraction prompt, as
+  plain text. This is the only thing you edit to change prompt behavior.
+- `lib/eval-harness-stack.ts`, `bin/app.ts` — the CDK stack: a Bedrock Prompt resource built from
+  the files above, two S3 buckets (dataset + output, both destroy-on-delete), and the IAM role
+  Bedrock Evaluation Jobs assume.
+- `datasets/golden.jsonl`, `datasets/edge-case.jsonl` — the evaluation datasets, in the JSONL
+  schema Bedrock's automated evaluation jobs require.
+- `fixtures/golden/`, `fixtures/edge-case/` — the same 14 cases as human-readable documentation
+  (raw transcript, expected extraction, the rule each one validates).
+- `eval-jobs/golden-job.json`, `eval-jobs/edge-case-job.json` — `create-evaluation-job` CLI input
+  templates (need the placeholder values filled in after deploy — see `docs/runbook.md`).
+- `docs/operator-guide.md` — plain-language guide to the extraction rules.
+- `docs/eval-harness-design.md` — what's evaluated, the custom-metric design, and the trade-off of
+  zero bespoke code (no deterministic checks — everything is judged by an LLM against written
+  instructions).
+- `docs/golden-dataset.md` / `docs/edge-case-dataset.md` — what each dataset covers.
+- `docs/runbook.md` — deploy, run an evaluation, read results, tear down.
 
 ## Quick start
 
 ```bash
 npm install
-
-# Smoke-test the harness itself, no AWS credentials needed (uses each fixture's own
-# expected output as a stand-in candidate — does not validate the prompt):
-npm run eval:dry-run -- --verbose
-
-# Real run against Bedrock (needs AWS credentials with Bedrock invoke access):
-npm run eval -- --dataset=all --verbose
+npx cdk deploy
 ```
 
-Flags: `--dataset=golden|edge-cases|all` (default `all`), `--dry-run`, `--verbose`,
-`--model-under-test=<bedrock-model-id>`, `--judge-model=<bedrock-model-id>`,
-`--out-dir=<path>` (default `reports/`). Model IDs default to placeholders and are meant to be
-overridden via flags or the `MODEL_UNDER_TEST_ID` / `JUDGE_MODEL_ID` env vars for whichever
-account and region this is deployed to (`AWS_REGION`, default `eu-west-2`).
-
-Reports are written as JSON + Markdown to `reports/<run-id>.{json,md}` (gitignored — these are run
-artifacts, not source).
-
-## Testing the harness itself
-
-```bash
-npm test        # unit tests for the deterministic checks (src/checks.test.ts)
-npm run typecheck
-```
+Then see `docs/runbook.md` for filling in `eval-jobs/*.json` and submitting an evaluation via
+`aws bedrock create-evaluation-job`.
 
 ## Deploying this
 
-This repo has no infrastructure-as-code checked in and makes no assumption about which AWS
-account or region it runs against — point it at whichever account has Bedrock model access
-enabled, via standard AWS credential resolution (`AWS_PROFILE`, `AWS_REGION`, or equivalent).
+No AWS account, region, or model ID is hardcoded — point it at whichever account has Bedrock
+model access enabled for the Claude models you want to use, via standard AWS credential
+resolution. Model IDs are passed as CDK context (`-c modelUnderTestId=...`).
+
+## Tearing down
+
+```bash
+npx cdk destroy
+```
+
+Every resource here is destroy-on-delete — there's nothing to clean up by hand afterward.

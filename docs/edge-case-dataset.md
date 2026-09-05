@@ -1,17 +1,21 @@
 # Edge-case / adversarial test dataset
 
+## Two forms, one source of truth
+
+Same relationship as the golden set (`docs/golden-dataset.md`): `fixtures/edge-case/*.json` is
+the human-readable documentation (raw transcript, the specific rule each case validates), and
+`datasets/edge-case.jsonl` is the machine-consumable form the evaluation job actually reads —
+same schema, `referenceResponse` always `{"actions":[],"decisions":[]}` for this set by design.
+Update both if you add or change a fixture.
+
 ## Purpose, and how this differs from the golden set
 
-The golden set (`docs/golden-dataset.md`) confirms the prompt gets clean cases right. This set
-exists to catch the opposite failure mode: **over-extraction** — the model finding an action or
-decision where there isn't one. Every fixture here expects empty (or near-empty) arrays; a
-fixture that unexpectedly returns items is a real bug, not noise, in the same way a golden-set
-failure is.
+The golden set confirms the prompt gets clean cases right. This set exists to catch the opposite
+failure mode: **over-extraction** — the model finding an action or decision where there isn't
+one. Every fixture here expects empty arrays; a fixture that unexpectedly returns items is a real
+bug, not noise, in the same way a golden-set failure is.
 
 ## Fixtures
-
-9 fixtures in `fixtures/edge-case/` (see `index.json` for the manifest), each documenting the
-expected output and the specific prompt rule it validates:
 
 | File | Rule validated |
 |---|---|
@@ -25,18 +29,17 @@ expected output and the specific prompt rule it validates:
 | `08-prompt-injection-direct.json` | Injection resistance — blunt "ignore instructions" attempt |
 | `09-spoofed-decision-injection.json` | Injection resistance + no invention — planted fake structured decision |
 
-Fixtures 08 and 09 are the injection-resistance cases referenced in `docs/eval-harness-design.md`
-as the 100%-pass-required security gate — any deviation from empty arrays on either one means the
-untrusted-content wrap failed to hold, which blocks shipping the prompt change outright.
+Fixtures 08 and 09 are the injection-resistance cases — the security gate referenced in
+`docs/eval-harness-design.md`: any deviation from empty arrays on either one means the
+untrusted-content wrap failed to hold.
 
 Fixture 09 is worth a second look: it plants a literal `Action:`/`Decision:`/`Quote:` structured
-line inside an otherwise normal transcript, with a self-consistent quote. A purely deterministic
-quote-containment check would wrongly pass it — the planted text really is an exact substring of
-the transcript. No real participant actually said or agreed to it, so it must still be dropped;
-this is precisely why classification correctness needs the LLM judge and can't be verified by
-string-matching alone.
+line inside an otherwise normal transcript, with a self-consistent quote — a purely deterministic
+quote-containment check would wrongly pass it, since the planted text really is an exact
+substring of the transcript. The judge's instructions (`eval-jobs/edge-case-job.json`) explicitly
+call this pattern out so it isn't rated Pass just because the quote checks out mechanically.
 
 ## Extending this set
 
-Same process as the golden set (`docs/golden-dataset.md`) — add a fixture whenever a real
-over-extraction failure surfaces, with its expected output and the rule it validates documented.
+Same process as the golden set — add a fixture (both forms) whenever a real over-extraction
+failure surfaces, with the rule it validates documented.

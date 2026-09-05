@@ -1,22 +1,20 @@
 {
-  "name": "meeting-transcript-eval-harness",
+  "name": "meeting-transcript-eval-infra",
   "version": "1.0.0",
   "private": true,
-  "description": "Bedrock LLM-as-judge evaluation harness for the meeting transcript extraction prompt.",
-  "type": "module",
+  "description": "CDK infra for a Bedrock-native transcript extraction prompt evaluation (Prompt Management + Evaluation Jobs). No application/checking logic lives here by design.",
   "scripts": {
-    "eval": "tsx src/run-eval.ts",
-    "eval:dry-run": "tsx src/run-eval.ts --dry-run",
-    "typecheck": "tsc --noEmit",
-    "test": "tsx --test src/*.test.ts"
-  },
-  "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.700.0",
-    "zod": "^3.23.8"
+    "synth": "cdk synth",
+    "deploy": "cdk deploy --require-approval never",
+    "destroy": "cdk destroy --force",
+    "diff": "cdk diff"
   },
   "devDependencies": {
-    "tsx": "^4.19.2",
+    "aws-cdk": "^2.1140.0",
+    "aws-cdk-lib": "^2.170.0",
+    "constructs": "^10.4.2",
     "typescript": "^5.6.3",
+    "ts-node": "^10.9.2",
     "@types/node": "^22.9.0"
   }
 }

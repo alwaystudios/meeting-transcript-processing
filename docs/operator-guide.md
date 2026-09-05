@@ -1,8 +1,8 @@
 # Operator guide: transcript extraction rules
 
-This is the plain-language guide to what the extraction prompt (`src/prompt.ts`) does and doesn't
-pull out of a meeting transcript, for anyone validating a prompt change or reviewing why a
-particular item was or wasn't extracted.
+This is the plain-language guide to what the extraction prompt (`prompt/system-prompt.txt`) does
+and doesn't pull out of a meeting transcript, for anyone validating a prompt change or reviewing
+why a particular item was or wasn't extracted.
 
 ## What counts as a concrete action (not noise)
 
@@ -62,12 +62,13 @@ documents its raw transcript, the expected output, and — for edge cases — th
 validates. Read a few before writing a new one; they're meant to double as documentation, not just
 test data.
 
-## Test dataset and evaluation harness
+## Test dataset and evaluation
 
 - `docs/golden-dataset.md` / `docs/edge-case-dataset.md` — what each fixture set is for.
-- `docs/eval-harness-design.md` — how the harness checks a candidate response (deterministic
-  checks vs. LLM judge, and why they're split that way).
-- `docs/runbook.md` — how to actually run the harness against a prompt change.
+- `docs/eval-harness-design.md` — how a candidate response gets rated (Bedrock's native Prompt
+  Management + Evaluation Jobs, a custom Pass/Fail metric, and the trade-off of judging everything
+  through that one metric rather than a mix of deterministic checks and an LLM judge).
+- `docs/runbook.md` — how to actually deploy and run an evaluation against a prompt change.
 
 ## Troubleshooting common extraction failures
 
@@ -78,10 +79,11 @@ test data.
 - **Missing speaker names**: expected and correct when the source has no diarization (auto-
   captions without speaker labels, or plain-text pastes). Confirm `speaker` came back empty rather
   than guessed from context — a wrong guess is worse than an honest blank.
-- **Messy VTT formatting** (stray `NOTE`/`STYLE`/`REGION` blocks, inconsistent line breaks): these
-  are stripped during VTT parsing (`formatVttCues` in `src/prompt.ts`) before the prompt ever sees
-  the text; if a fixture using unusual VTT formatting fails, check whether the raw cue text
-  actually survived parsing before assuming the prompt itself is at fault.
+- **Messy VTT formatting** (stray `NOTE`/`STYLE`/`REGION` blocks, inconsistent line breaks): a
+  real ingestion pipeline should strip these before the transcript reaches this prompt — the
+  dataset rows in `datasets/*.jsonl` already contain decoded, cue-formatted text for this reason.
+  If a real transcript fails and you suspect formatting, check what actually reached the model
+  before assuming the prompt itself is at fault.
 - **A fixture fails and you're not sure if the prompt or the fixture is wrong**: re-read the
   fixture's `notes` field and `ruleValidated` (edge cases) — if the fixture's own expectation looks
   wrong, fix the fixture and say why in `notes`; don't quietly loosen the prompt to match a bad
