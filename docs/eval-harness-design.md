@@ -7,7 +7,9 @@ Evaluation Jobs — not a custom script. CDK (`lib/eval-harness-stack.ts`) provi
 supporting infrastructure:
 
 - A Bedrock `CfnPrompt` resource holding the extraction prompt, read verbatim from
-  `prompt/system-prompt.txt` and `prompt/user-message-template.txt`.
+  `prompt/system-prompt.txt` and `prompt/user-message-template.txt`. This is the Prompt
+  Management copy (`PromptArn`) — what a product would invoke. Evaluation jobs do **not**
+  call it.
 - Two S3 buckets: one for the evaluation datasets (`datasets/*.jsonl`, deployed via
   `BucketDeployment`), one for evaluation job output. Both `RemovalPolicy.DESTROY` with
   `autoDeleteObjects` — nothing here holds data worth retaining.
@@ -58,6 +60,14 @@ prompt dataset (`aws bedrock create-evaluation-job help`). These are generated f
 content as the human-readable fixtures in `fixtures/golden/` and `fixtures/edge-case/` (see
 `docs/golden-dataset.md` / `docs/edge-case-dataset.md`) — the fixtures are the documentation, the
 JSONL files are what the evaluation job actually reads.
+
+**Confirmed against a real job config, not assumed from the Prompt ARN sitting on the stack:**
+`eval-jobs/*.json` → `inferenceConfig.models[].bedrockModel.modelIdentifier` is a bare model ID
+(Nova Pro on this account). There is no prompt identifier in the job. Bedrock sends each row's
+`prompt` string to that model as the entire input. Changing `prompt/system-prompt.txt` and
+redeploying updates Prompt Management only; the next evaluation still uses whatever wording is
+baked into the JSONL that `BucketDeployment` last uploaded. Re-render those rows before deploy
+or you will score the previous prompt — see `docs/runbook.md` ("Validating a prompt change").
 
 ## Decisions
 

@@ -12,8 +12,8 @@ see docs/setup.md) and the Python 3 standard library - no extra packages, no Cla
 access beyond the AWS CLI calls it already needs. Needs the same S3 read access on the output
 bucket documented as iam/steady-state-policy.json's ReadEvaluationResults statement.
 
-Output is written to --out (default reports/eval-report.html) and is gitignored - only this
-script is meant to be checked in, never the reports it produces.
+Output is written to --out (default reports/eval-report.html). That default path is gitignored.
+To update the public GitHub Pages snapshot, pass --out published/eval-report.html.
 """
 import argparse
 import json

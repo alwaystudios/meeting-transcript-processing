@@ -35,9 +35,11 @@ assumption about deployment target. Instead:
    aws cloudformation describe-stacks --stack-name MeetingTranscriptEvalHarness \
      --query "Stacks[0].Outputs" --output table
    ```
-   The other two are Claude model IDs from the Bedrock catalog in your account/region — see
+   The other two are model IDs from the Bedrock catalog in your account/region — see
    `docs/setup.md` step 4 for the `list-foundation-models` command if you haven't already run it.
-   Nothing here requires digging through the console; both commands are copy-pasteable.
+   Nothing here requires digging through the console; both commands are copy-pasteable. On this
+   account the working generator is an Amazon Nova model, not Claude — Anthropic models as
+   `<MODEL_UNDER_TEST_ID>` have throttled or failed these jobs (see `docs/setup.md` point 6).
 
    Edit the `.local.json` copies (not the originals) and replace the placeholders:
    - `<EVAL_JOB_ROLE_ARN>` → the `EvalJobRoleArn` value from the command above.
@@ -91,7 +93,15 @@ before/after a prompt change) to see a per-fixture version comparison — exactl
 after the "validating a prompt change" loop below. Needs only the AWS CLI and Python 3's standard
 library — no extra packages, and it doesn't call or depend on any AI model itself; it just formats
 results Bedrock already produced. Output goes to `reports/` by default, which is gitignored —
-generated reports are never meant to be committed, only the script that builds them.
+local rebuilds stay off git.
+
+The shareable copy is `published/eval-report.html`. That file is tracked and deployed to GitHub
+Pages as https://alwaystudios.github.io/meeting-transcript-processing/. To refresh the public
+page after a new eval run, write the report there and merge:
+
+```bash
+python3 scripts/build-eval-report.py <job-arn> [<job-arn> ...] --out published/eval-report.html
+```
 
 ## What constitutes a pass
 
@@ -104,13 +114,25 @@ generated reports are never meant to be committed, only the script that builds t
 
 ## Validating a prompt change
 
+The Bedrock Prompt resource (`PromptArn`) and the evaluation jobs are **not wired together**.
+`eval-jobs/*.json` names only a model ID under `inferenceConfig` — no prompt identifier. Each
+dataset row's `prompt` field is the full text Bedrock sends to the generator (system rules plus
+the wrapped transcript). Redeploying updates the Prompt Management copy, but unless
+`datasets/*.jsonl` was re-rendered first, the next evaluation still scores the old wording.
+
 1. Edit `prompt/system-prompt.txt` and/or `prompt/user-message-template.txt`.
-2. Redeploy: `npx cdk deploy` (updates the Bedrock Prompt resource in place).
-3. Re-run both evaluation jobs (see above) and check the results.
-4. **Golden row fails:** the prompt regressed on a case that used to work. Fix the prompt. If the
+2. Re-render every row in `datasets/golden.jsonl` and `datasets/edge-case.jsonl` so `prompt`
+   starts with the new system text, then the wrap, then the same transcript as before (keep
+   `referenceResponse` / `category` / `fixtureId`). There is no generator script — this is
+   manual, same as keeping fixtures and JSONL in sync. Skip this step and you will evaluate the
+   previous prompt.
+3. Redeploy: `npx cdk deploy` (updates the Bedrock Prompt resource **and** uploads the new JSONL
+   to the dataset bucket).
+4. Re-run both evaluation jobs (see above) and check the results.
+5. **Golden row fails:** the prompt regressed on a case that used to work. Fix the prompt. If the
    fixture's own expectation turns out wrong, fix the fixture instead (`fixtures/golden/*.json`
    docs plus the matching `datasets/golden.jsonl` row) — but say why in its `notes` field.
-5. **Edge-case row fails:** treat as blocking, always. Do not ship the prompt change until it
+6. **Edge-case row fails:** treat as blocking, always. Do not ship the prompt change until it
    passes.
 
 ## Tearing down
@@ -125,7 +147,7 @@ a stack holding real customer data.
 
 ## Feedback loop
 
-Failing row → edit the prompt files → redeploy → re-run → repeat. If a genuinely new failure mode
+Failing row → edit the prompt files → re-render `datasets/*.jsonl` → redeploy → re-run → repeat. If a genuinely new failure mode
 shows up in real use later, add it as a new fixture (`fixtures/golden/` if it should extract
 cleanly, `fixtures/edge-case/` if it should extract nothing) and its corresponding `datasets/*.jsonl`
 row — the dataset is meant to grow as real failure modes are discovered, not stay frozen at

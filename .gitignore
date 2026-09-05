@@ -8,5 +8,6 @@ cdk.context.json
 eval-jobs/*.local.json
 iam/*.local.json
 
-# Generated eval reports (scripts/build-eval-report.py output) - never checked in.
+# Local eval report rebuilds (scripts/build-eval-report.py default output).
+# The shareable snapshot is published/eval-report.html — that one is tracked.
 reports/
